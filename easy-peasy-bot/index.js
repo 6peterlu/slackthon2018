@@ -155,7 +155,6 @@ app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
 
-
 // Match: check what is not null in "what", "when", "where"
 // Objects:
 //    User:
@@ -177,3 +176,30 @@ app.listen(app.get('port'), function() {
 //
 
 // States of a User: have preferences and in a group, have preferences but no group available,
+
+
+function Person(usrid) {
+  this.usrID = usrid;
+
+  this.curGroupid = "";
+  this.what = ""
+  this.when = ""
+  this.where = ""
+
+  this.taken = false
+  this.preference = [3, 1, 2]
+
+}
+
+var person1 = new Person("pid");
+
+
+function Group(what, when, where, gpid){
+  this.what = what
+  this.when = when
+  this.where = where
+  this.gpid = gpid
+
+  this.created = false // true if >= 2 ppl  |  wheneer created become true, send msg about this new group
+  this.users = []
+}
