@@ -146,20 +146,27 @@ app.post('/', function(req, res){
 
   if(requestType === "user_event_preference") {
     // Set user event preference
+
     console.log("getting: " + payload.actions[0].value)
     currUser.what = payload.actions[0].value
+
   }
 
   else if(requestType === "user_time_preference") {
     // Set user time preference
+
     console.log("getting: " + payload.actions[0].selected_options[0].value)
     currUser.when = payload.actions[0].selected_options[0].value
+
   }
 
   else if(requestType === "user_location_preference") {
     // Set user location preference
     currUser.where = "Twin Peaks"
     // Match user
+    var matchresult = match(person, allgroups)
+    res.send(matchresult)
+    // go through list of groups and return "no group yet" or "group info: ... "
   }
 
   // var group1 = new Group("hiking", "Saturday", "Twin Peaks");
@@ -175,6 +182,57 @@ app.post('/', function(req, res){
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
+
+
+// check whether two preferences overlap each other (have the same range)
+function overlap(a, b) {
+  return a == b // for now
+}
+
+
+// function that matches a person to a group
+function match(person, allgroups) {
+
+  gplen = allgroups.length;
+  bestid = 0
+  bestmatches = 0
+
+  for (i = 0; i < gpen; i++) {
+    
+    curgp = allgroups[i]
+    same = 0
+
+    same += overlap(person.what, curgp.what) ? 1 : 0;
+    same += overlap(person.when, curgp.when) ? 1 : 0;
+    same += overlap(person.where, curgp.where) ? 1 : 0;
+
+    if (same > bestmatches) {
+      bestid = i
+      bestmatches = same
+    }
+  }
+
+  if (bestmatches < 2) {
+    return "no mathes yet, we will update you later."
+  }
+
+  bestgp = allgroups[bestid]
+  person.curGroupid = bestgp.gpid
+  bestgp.users.push(person)
+
+  if (bestgp.created == false) {
+    bestgp.created = true
+    createchannel(bestgp)
+
+  } else {
+    asktojoin(person, bestgp)
+  }
+
+  return "found peers with similar preference! groupid: ", bestgp.gpid + " event: " + bestgp.what + " time: " + bestgp.when + " location: " + bestgp.where
+
+
+}
+
 
 // Match: check what is not null in "what", "when", "where"
 // Objects:
@@ -220,5 +278,8 @@ function Group(what, when, where, gpid){
   this.users = []
 }
 
+
+var allgroups = []
 var allUsers = [];
 var userIdToUser = new Object();
+
