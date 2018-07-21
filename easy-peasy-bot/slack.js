@@ -26,7 +26,7 @@ let dummyData = [
   }
 ]
 
-exports.askUserForEventPreference = function() {
+exports.askUserForEventPreference = function(channelId) {
   if (LOGGING_ON) {
     console.log("askUserForEventPreference: starting");
   }
@@ -55,7 +55,7 @@ exports.askUserForEventPreference = function() {
   }
   if (BOT_ON) {
     web.chat.postMessage({
-      channel:SPAM_CHANNEL_ID,
+      channel:channelId,
       text:constructedMessageType.text,
       attachments:constructedMessageType.attachments,
     });
@@ -65,7 +65,7 @@ exports.askUserForEventPreference = function() {
   }
 }
 
-exports.askUserForTimePreference = function() {
+exports.askUserForTimePreference = function(channelId) {
   if (LOGGING_ON) {
     console.log("askUserForTimePreference: starting");
   }
@@ -99,7 +99,7 @@ exports.askUserForTimePreference = function() {
   }
   if (BOT_ON) {
     web.chat.postMessage({
-      channel:SPAM_CHANNEL_ID,
+      channel:channelId,
       text:constructedMessageTime.text,
       attachments:constructedMessageTime.attachments
     });
@@ -109,7 +109,7 @@ exports.askUserForTimePreference = function() {
   }
 }
 
-exports.askUserForLocationPreference = function() {
+exports.askUserForLocationPreference = function(channelId) {
   if (LOGGING_ON) {
     console.log("askUserForLocationPreference: starting");
   }
@@ -118,7 +118,7 @@ exports.askUserForLocationPreference = function() {
   };
   if (BOT_ON) {
     web.chat.postMessage({
-      channel:SPAM_CHANNEL_ID,
+      channel:channelId,
       text:constructedMessageLocation.text,
     });
   }
@@ -128,7 +128,7 @@ exports.askUserForLocationPreference = function() {
 }
 
 //Response when event exists
-exports.eventExistsResponse = function(event) {
+exports.eventExistsResponse = function(event, channelId) {
   let constructedMessageResponse = {
     text: "Here are the events that most fit your response: ",
     attachments: [
@@ -139,7 +139,7 @@ exports.eventExistsResponse = function(event) {
   }
   if (BOT_ON) {
       web.chat.postMessage({
-        channel: SPAM_CHANNEL_ID,
+        channel: channelId,
         text: constructedMessageResponse.text,
         attachments: constructedMessageResponse.attachments
       });
@@ -147,7 +147,7 @@ exports.eventExistsResponse = function(event) {
 }
 
 // Response when event doesn't exist
-exports.eventDoesntExistResponse = function(event) {
+exports.eventDoesntExistResponse = function(event, channelId) {
   let constructedMessageResponse = {
       text: "No event match :cry: Do you want us to DM you when we find matches?",
       attachments: [
@@ -177,7 +177,7 @@ exports.eventDoesntExistResponse = function(event) {
   }
   if (BOT_ON) {
       web.chat.postMessage({
-        channel: SPAM_CHANNEL_ID,
+        channel: channelId,
         text: constructedMessageResponse.text,
         attachments: constructedMessageResponse.attachments
       });
@@ -185,7 +185,7 @@ exports.eventDoesntExistResponse = function(event) {
 }
 
 // Invite to join channel
-exports.inviteUserToChannel = function() {
+exports.inviteUserToChannel = function(channelId) {
   let constructedMessageInvite = {
     text: "A channel has been made for your event! Would you like to join?",
     attachments: [
@@ -217,7 +217,7 @@ exports.inviteUserToChannel = function() {
 
   if (BOT_ON) {
     web.chat.postMessage({
-      channel: SPAM_CHANNEL_ID,
+      channel: channelId,
       text: constructedMessageInvite.text,
       attachments:constructedMessageInvite.attachments
     });
