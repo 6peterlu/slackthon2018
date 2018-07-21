@@ -10,14 +10,14 @@ const LOGGING_ON = true;
 
 var exports = module.exports = {};
 
-// let userAndBotDM 
-  
+// let userAndBotDM
+
 let dummyData = [
   {type: 'hiking',
    time: 'January 5th',
    location: 'Twin Peaks',
    who: '',
-  }, 
+  },
   {
     type: 'movies',
    time: 'January 10th',
@@ -64,7 +64,7 @@ exports.askUserForEventPreference = function() {
     console.log("askUserForEventPreference: finished");
   }
 }
-  
+
 exports.askUserForTimePreference = function() {
   if (LOGGING_ON) {
     console.log("askUserForTimePreference: starting");
@@ -90,7 +90,7 @@ exports.askUserForTimePreference = function() {
         }
       ]
    };
-  
+
   for (let day of days) {
     constructedMessageTime.attachments[0].actions[0].options.push({
       text: day,
@@ -287,7 +287,5 @@ exports.introToGroupChannel = function(channelId) {
       text: constructedMessageIntroGroup.text,
     });
   }
-  
+
 }
-
-

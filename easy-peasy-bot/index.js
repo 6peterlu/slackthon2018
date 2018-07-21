@@ -233,7 +233,7 @@ function match(person, allgroups) {
 
   if (bestgp.created == false) {
     bestgp.created = true
-    createchannel(bestgp)
+    slack.createNewChannel("TestChannelplswork", bestgp.users);
 
   } else {
     asktojoin(person, bestgp)
@@ -242,6 +242,11 @@ function match(person, allgroups) {
   return "found peers with similar preference! groupid: ", bestgp.gpid + " event: " + bestgp.what + " time: " + bestgp.when + " location: " + bestgp.where
 
 
+}
+
+function reassign(person, allgroups) {
+  // Match logic but temporarily take out the user's current group
+  // allgroups.splice(, 1);
 }
 
 
