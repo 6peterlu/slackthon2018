@@ -133,10 +133,13 @@ app.post('/', function(req, res){
 
   if(requestType === user_event_preference) {
     // Set user event preference
+
   }
 
   else if(requestType === user_time_preference) {
     // Set user time preference
+    
+
   }
 
 
@@ -145,6 +148,9 @@ app.post('/', function(req, res){
 
 
     // Match user
+    var matchresult = match(person, allgroups)
+    res.send(matchresult)
+    // go through list of groups and return "no group yet" or "group info: ... "
   }
 
   console.log(obj.callback_id);
@@ -154,6 +160,57 @@ app.post('/', function(req, res){
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
+
+
+// check whether two preferences overlap each other (have the same range)
+function overlap(a, b) {
+  return a == b // for now
+}
+
+
+// function that matches a person to a group
+function match(person, allgroups) {
+
+  gplen = allgroups.length;
+  bestid = 0
+  bestmatches = 0
+
+  for (i = 0; i < gpen; i++) {
+    
+    curgp = allgroups[i]
+    same = 0
+
+    same += overlap(person.what, curgp.what) ? 1 : 0;
+    same += overlap(person.when, curgp.when) ? 1 : 0;
+    same += overlap(person.where, curgp.where) ? 1 : 0;
+
+    if (same > bestmatches) {
+      bestid = i
+      bestmatches = same
+    }
+  }
+
+  if (bestmatches < 2) {
+    return "no mathes yet, we will update you later."
+  }
+
+  bestgp = allgroups[bestid]
+  person.curGroupid = bestgp.gpid
+  bestgp.users.push(person)
+
+  if (bestgp.created == false) {
+    bestgp.created = true
+    createchannel(bestgp)
+
+  } else {
+    asktojoin(person, bestgp)
+  }
+
+  return "found peers with similar preference! groupid: ", bestgp.gpid + " event: " + bestgp.what + " time: " + bestgp.when + " location: " + bestgp.where
+
+
+}
+
 
 // Match: check what is not null in "what", "when", "where"
 // Objects:
@@ -203,3 +260,5 @@ function Group(what, when, where, gpid){
   this.created = false // true if >= 2 ppl  |  wheneer created become true, send msg about this new group
   this.users = []
 }
+
+var allgroups = []
