@@ -224,7 +224,7 @@ exports.inviteUserToChannel = function() {
   }
 }
 
-exports.createNewChannel = function(channelName) {
+exports.createNewChannel = function(channelName, userIdList) {
   if (LOGGING_ON) {
     console.log("createNewChannelWithUsers: starting");
   }
@@ -232,8 +232,17 @@ exports.createNewChannel = function(channelName) {
     web.channels.create({
       token: process.env.USER_TOKEN,
       name: channelName
-    });
-    console.log("hi");
+    }).then(
+      function(response) {
+        console.log(response);
+        for (let user of userIdList) {
+          web.channels.invite({
+            token: process.env.USER_TOKEN,
+            channel: response.channel.id,
+            user: user
+          });
+        }
+      });
   }
   if (LOGGING_ON) {
     console.log("createNewChannelWithUsers: finished");
