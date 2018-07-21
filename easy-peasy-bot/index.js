@@ -124,7 +124,7 @@ app.set('port', process.env.PORT);
 
 app.post('/', function(req, res){
   console.log("hello");
-  console.log(req.body);
+  // console.log(req.body);
   console.log(req.body.payload);
 
   console.log(typeof(req.body.payload));
@@ -152,6 +152,7 @@ app.post('/', function(req, res){
     console.log("getting: " + payload.actions[0].value)
     currUser.what = payload.actions[0].value
 
+    slack.askUserForTimePreference(payload.channel.id);
   }
 
   else if(requestType === "user_time_preference") {
@@ -159,17 +160,20 @@ app.post('/', function(req, res){
 
     console.log("getting: " + payload.actions[0].selected_options[0].value)
     currUser.when = payload.actions[0].selected_options[0].value
+    slack.askUserForLocationPreference(payload.channel.id);
 
+    userIdToUser[payload.user.id].waitingForLocation = true;
   }
 
-  else if(requestType === "user_location_preference") {
-    // Set user location preference
-    currUser.where = "Twin Peaks"
-    // Match user
-    var matchresult = match(person, allgroups)
-    res.send(matchresult)
-    // go through list of groups and return "no group yet" or "group info: ... "
-  }
+  // else if(requestType === "user_location_preference") {
+  //   // Set user location preference
+  //   currUser.where = "Twin Peaks"
+  //   // Match user
+  //   var matchresult = match(person, allgroups)
+  //   slack.sendPlaintextMessage(payload.channel.id, matchresult)
+  //   // res.send("matchresult")
+  //   // go through list of groups and return "no group yet" or "group info: ... "
+  // }
 
   // var group1 = new Group("hiking", "Saturday", "Twin Peaks");
   // group1.users.push("hi");
@@ -178,25 +182,46 @@ app.post('/', function(req, res){
   // console.log(currUser.taken);
 
   // console.log(payload.callback_id);
-  res.send('It works!');
+  // res.send('It works!');
 });
 
 
 app.post('/events', function(req, res){
   console.log("in events")
 
-  console.log(req.body)
-  var text = req.body.event.text
+  res.sendStatus(200);
+  if(!req.body.event.hasOwnProperty('bot_id')) {
+    console.log("NOT A BOT")
+    // console.log(req)
+    var text = req.body.event.text
+    var currUserId = req.body.event.user
 
-  if(text.includes("hello")) {
-    console.log("here?")
+    if(allUsers.includes(currUserId) && userIdToUser[currUserId].waitingForLocation === true) {
+      console.log("waiting for location is true")
+      userIdToUser[currUserId].where = text;
+      userIdToUser[currUserId].waitingForLocation = false;
+      console.log("set location. waiting for location is false")
 
-    console.log(req.body.event.channel)
-    slack.sendPlaintextMessage(req.body.event.channel, "Hello there!")
-    // res.send("wow look")
-    slack.askUserForEventPreference(req.body.event.channel);
-    slack.askUserForTimePreference(req.body.event.channel);
-    slack.askUserForLocationPreference(req.body.event.channel);
+      var matchresult = match(person, allgroups)
+      slack.sendPlaintextMessage(payload.channel.id, matchresult)
+    }
+
+    else {
+      if(text.includes("hello")) {
+        console.log("here?")
+
+        console.log(req.body.event.channel)
+        slack.sendPlaintextMessage(req.body.event.channel, "Hello there!")
+        // sleep(1000).then(() => {
+           // Do something after the sleep!
+           slack.askUserForEventPreference(req.body.event.channel);
+        // })
+      }
+    }
+  }
+
+  else {
+    console.log("IS A BOT")
   }
 
   // res.sendStatus(200);
@@ -205,6 +230,11 @@ app.post('/events', function(req, res){
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
+
+
+function sleep (time) {
+ return new Promise((resolve) => setTimeout(resolve, time));
+}
 
 
 
@@ -257,7 +287,7 @@ function match(person, allgroups) {
     slack.createNewChannel("TestChannelplswork", bestgp.users);
 
   } else {
-    asktojoin(person, bestgp)
+    slack.inviteUserToChannel()
   }
 
   return "found peers with similar preference! groupid: ", bestgp.gpid + " event: " + bestgp.what + " time: " + bestgp.when + " location: " + bestgp.where
@@ -300,6 +330,7 @@ function Person(usrid) {
   this.what = ""
   this.when = ""
   this.where = ""
+  this.waitingForLocation = false;
 
   this.taken = false // set true when select "YES" to join channel | used to ask future preference
   this.preference = [3, 1, 2]
