@@ -8,18 +8,18 @@
 //  * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
 //  */
 //
-// function onInstallation(bot, installer) {
-//     if (installer) {
-//         bot.startPrivateConversation({user: installer}, function (err, convo) {
-//             if (err) {
-//                 console.log(err);
-//             } else {
-//                 convo.say('I am a bot that has just joined your team');
-//                 convo.say('You must now /invite me to a channel so that I can be of use!');
-//             }
-//         });
-//     }
-// }
+function onInstallation(bot, installer) {
+    if (installer) {
+        bot.startPrivateConversation({user: installer}, function (err, convo) {
+            if (err) {
+                console.log(err);
+            } else {
+                convo.say('I am a bot that has just joined your team');
+                convo.say('You must now /invite me to a channel so that I can be of use!');
+            }
+        });
+    }
+}
 //
 //
 // /**
@@ -127,27 +127,48 @@ app.post('/', function(req, res){
 
   console.log(typeof(req.body.payload));
 
-  let obj = JSON.parse(req.body.payload);
+  let payload = JSON.parse(req.body.payload);
 
-  let requestType =  obj.callback_id;
+  let requestType =  payload.callback_id;
 
-  if(requestType === user_event_preference) {
+  // Add user if the current user id does not exist
+  let currUserId = payload.user.id;
+
+  var currUser;
+
+  if(allUsers.includes(currUserId)) {
+    currUser = userIdToUser[currUserId];
+  } else {
+    allUsers.push(currUserId);
+    currUser = new Person(currUserId);
+    userIdToUser[currUserId] = currUser;
+  }
+
+  if(requestType === "user_event_preference") {
     // Set user event preference
+    console.log("getting: " + payload.actions[0].value)
+    currUser.what = payload.actions[0].value
   }
 
-  else if(requestType === user_time_preference) {
+  else if(requestType === "user_time_preference") {
     // Set user time preference
+    console.log("getting: " + payload.actions[0].selected_options[0].value)
+    currUser.when = payload.actions[0].selected_options[0].value
   }
 
-
-  else if(requestType === user_location_preference) {
+  else if(requestType === "user_location_preference") {
     // Set user location preference
-
-
+    currUser.where = "Twin Peaks"
     // Match user
   }
 
-  console.log(obj.callback_id);
+  // var group1 = new Group("hiking", "Saturday", "Twin Peaks");
+  // group1.users.push("hi");
+  // console.log(group1.users)
+
+  // console.log(currUser.taken);
+
+  // console.log(payload.callback_id);
   res.send('It works!');
 });
 
@@ -177,22 +198,17 @@ app.listen(app.get('port'), function() {
 
 // States of a User: have preferences and in a group, have preferences but no group available,
 
-
 function Person(usrid) {
   this.usrID = usrid;
 
-  this.curGroupid = "";
+  this.currGroupid = "";
   this.what = ""
   this.when = ""
   this.where = ""
 
   this.taken = false
   this.preference = [3, 1, 2]
-
 }
-
-var person1 = new Person("pid");
-
 
 function Group(what, when, where, gpid){
   this.what = what
@@ -203,3 +219,6 @@ function Group(what, when, where, gpid){
   this.created = false // true if >= 2 ppl  |  wheneer created become true, send msg about this new group
   this.users = []
 }
+
+var allUsers = [];
+var userIdToUser = new Object();
