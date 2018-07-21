@@ -189,7 +189,6 @@ function overlap(a, b) {
   return a == b // for now
 }
 
-
 // function that matches a person to a group
 function match(person, allgroups) {
 
@@ -198,7 +197,7 @@ function match(person, allgroups) {
   bestmatches = 0
 
   for (i = 0; i < gpen; i++) {
-    
+
     curgp = allgroups[i]
     same = 0
 
@@ -282,4 +281,4 @@ function Group(what, when, where, gpid){
 var allgroups = []
 var allUsers = [];
 var userIdToUser = new Object();
-
+var groupIdToGroup = new Object();
