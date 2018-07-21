@@ -1,3 +1,5 @@
+require('dotenv').config()
+
 const {WebClient} = require('@slack/client');
 
 const web = new WebClient(process.env.OAUTH_TOKEN);

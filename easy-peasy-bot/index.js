@@ -8,24 +8,24 @@
 //  * With custom integrations, we don't have a way to find out who installed us, so we can't message them :(
 //  */
 //
-function onInstallation(bot, installer) {
-    if (installer) {
-        bot.startPrivateConversation({user: installer}, function (err, convo) {
-            if (err) {
-                console.log(err);
-            } else {
-                convo.say('I am a bot that has just joined your team');
-                convo.say('You must now /invite me to a channel so that I can be of use!');
-            }
-        });
-    }
-}
+// function onInstallation(bot, installer) {
+//     if (installer) {
+//         bot.startPrivateConversation({user: installer}, function (err, convo) {
+//             if (err) {
+//                 console.log(err);
+//             } else {
+//                 convo.say('I am a bot that has just joined your team');
+//                 convo.say('You must now /invite me to a channel so that I can be of use!');
+//             }
+//         });
+//     }
+// }
 //
 //
 // /**
 //  * Configure the persistence options
 //  */
-//
+
 // var config = {};
 // if (process.env.MONGOLAB_URI) {
 //     var BotkitStorage = require('botkit-storage-mongo');
@@ -37,11 +37,12 @@ function onInstallation(bot, installer) {
 //         json_file_store: ((process.env.TOKEN)?'./db_slack_bot_ci/':'./db_slack_bot_a/'), //use a different name if an app or CI
 //     };
 // }
+// //
 //
-// /**
-//  * Are being run as an app or a custom integration? The initialization will differ, depending
-//  */
-//
+// // /**
+// //  * Are being run as an app or a custom integration? The initialization will differ, depending
+// //  */
+// //
 // if (process.env.TOKEN || process.env.SLACK_TOKEN) {
 //     //Treat this as a custom integration
 //     var customIntegration = require('./lib/custom_integrations');
@@ -80,7 +81,7 @@ function onInstallation(bot, installer) {
 //  * Core bot logic goes here!
 //  */
 // // BEGIN EDITING HERE!
-//
+
 // controller.on('bot_channel_join', function (bot, message) {
 //     bot.reply(message, "I'm here!")
 // });
@@ -94,19 +95,18 @@ function onInstallation(bot, installer) {
 //  * AN example of what could be:
 //  * Any un-handled direct mention gets a reaction and a pat response!
 //  */
-// //controller.on('direct_message,mention,direct_mention', function (bot, message) {
-// //    bot.api.reactions.add({
-// //        timestamp: message.ts,
-// //        channel: message.channel,
-// //        name: 'robot_face',
-// //    }, function (err) {
-// //        if (err) {
-// //            console.log(err)
-// //        }
-// //        bot.reply(message, 'I heard you loud and clear boss.');
-// //    });
-// //});
-
+// controller.on('direct_message,mention,direct_mention', function (bot, message) {
+//     bot.api.reactions.add({
+//         timestamp: message.ts,
+//         channel: message.channel,
+//         name: 'robot_face',
+//     }, function (err) {
+//         if (err) {
+//             console.log(err)
+//         }
+//         bot.reply(message, 'I heard you loud and clear boss.');
+//     });
+// });
 
 var express = require('express');
 var app = express();
@@ -120,7 +120,7 @@ var slack = require('./slack.js'); // usage: slack.method_name
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-app.set('port', (process.env.PORT || 80));
+app.set('port', process.env.PORT);
 
 app.post('/', function(req, res){
   console.log("hello");
@@ -179,6 +179,27 @@ app.post('/', function(req, res){
 
   // console.log(payload.callback_id);
   res.send('It works!');
+});
+
+
+app.post('/events', function(req, res){
+  console.log("in events")
+
+  console.log(req.body)
+  var text = req.body.event.text
+
+  if(text.includes("hello")) {
+    console.log("here?")
+
+    console.log(req.body.event.channel)
+    slack.sendPlaintextMessage(req.body.event.channel, "Hello there!")
+    // res.send("wow look")
+    slack.askUserForEventPreference(req.body.event.channel);
+    slack.askUserForTimePreference(req.body.event.channel);
+    slack.askUserForLocationPreference(req.body.event.channel);
+  }
+
+  // res.sendStatus(200);
 });
 
 app.listen(app.get('port'), function() {
