@@ -115,6 +115,8 @@ var request = require('request');
 
 var bodyParser = require('body-parser');
 
+var slack = require('./slack.js'); // usage: slack.method_name
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
