@@ -1,4 +1,5 @@
 const {WebClient} = require('@slack/client');
+const api = require('./api.js');
 
 const web = new WebClient(process.env.OAUTH_TOKEN);
 
@@ -287,7 +288,15 @@ exports.addUsersToNewChannel = function(channelId, userIdList) {
 // Intro message sent to a group channel when the channel is created
 exports.introToGroupChannel = function(channelId) {
   let constructedMessageIntroGroup = {
-    text: "Welcome to your group's channel! Now that you're here, you can figure out the details to meet. Here's an example call you can make to our pal Simple Poll to help you figure out those details: \n\n :zap: " + "`/poll 'What's your favorite sport?' 'Football' 'Tennis' anonymous`"
+    text: "Welcome to your group's channel! Figure out your plans here. Here are some quick tips to help.",
+    attachments: [
+      {
+        text: ":zap: Make a call to our pal Simple Poll to help you figure out details like so: \n\n" + "`/poll 'What's your favorite sport?' 'Football' 'Tennis' anonymous`"
+      },
+      {
+        text: ":zap: Get recs from yelp with `\snowball recs [restaurant name or 'restaurants'] [city]`"
+      }
+    ]
   };
 
   if (BOT_ON) {
@@ -296,5 +305,39 @@ exports.introToGroupChannel = function(channelId) {
       text: constructedMessageIntroGroup.text,
     });
   }
+}
 
+// Yelp recommendations message
+exports.yelpRecs = function(term, location) {
+  api.yelpRecs(term, location, function(yelpUrls) {
+    let constructedMessageResponse = {
+      text: "Here are some recs for your search!",
+      attachments: [
+      ]
+    }
+    let i = 0;
+    let emoji = "";
+    
+    for (let info in yelpUrls) {
+      if (i == 0) {
+        emoji = ":one:";
+      } else if (i == 1) {
+        emoji = ":two:";
+      } else {
+        emoji = ":three:";
+      }
+      constructedMessageResponse.attachments.push({
+        title: emoji + " " + yelpUrls[i].name + " at " + yelpUrls[i].location.address1 + " in " + yelpUrls[i].location.city,
+        title_link: yelpUrls[i].url
+      });
+      i++;
+    }
+    if (BOT_ON) {
+        web.chat.postMessage({
+          channel: SPAM_CHANNEL_ID,
+          text: constructedMessageResponse.text,
+          attachments: constructedMessageResponse.attachments
+        });
+      }
+  });
 }
