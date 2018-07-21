@@ -128,38 +128,52 @@ app.post('/', function(req, res){
   console.log(typeof(req.body.payload));
 
   let obj = JSON.parse(req.body.payload);
+
+  let requestType =  obj.callback_id;
+
+  if(requestType === user_event_preference) {
+    // Set user event preference
+  }
+
+  else if(requestType === user_time_preference) {
+    // Set user time preference
+  }
+
+
+  else if(requestType === user_location_preference) {
+    // Set user location preference
+
+
+    // Match user
+  }
+
   console.log(obj.callback_id);
   res.send('It works!');
 });
-
-// app.post('/post', function(req, res){
-//   var parsed_url = url.format({
-//     pathname: 'https://api.genius.com/search',
-//     query: {
-//       access_token: process.env.GENIUS_ACCESS,
-//       q: req.body.text
-//     }
-//   });
-//
-//   request(parsed_url, function (error, response, body) {
-//     if (!error && response.statusCode == 200) {
-//       var data = JSON.parse(body);
-//       var first_url = data.response.hits[0].result.url;
-//
-//       var body = {
-//         response_type: "in_channel",
-//         text: first_url
-//       };
-//
-//       res.send(body);
-//     }
-//   });
-// });
 
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
 
-// var server = app.listen(3000, function () {
-//     console.log("app running on port.", server.address().port);
-// });
+
+// Match: check what is not null in "what", "when", "where"
+// Objects:
+//    User:
+//        userId (String)
+//        currentGroup (String)
+//        taken (boolean)
+//        where (String)
+//        when  (String)
+//        what  (String)
+//    Group
+//      groupId
+//      List of users
+//      what
+//      when
+//      where
+//    List of groups
+//    List of total users
+//    List of unassigned users
+//
+
+// States of a User: have preferences and in a group, have preferences but no group available,
