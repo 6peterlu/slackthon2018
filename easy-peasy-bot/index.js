@@ -184,23 +184,31 @@ app.listen(app.get('port'), function() {
 });
 
 
+
 // check whether two preferences overlap each other (have the same range)
 function overlap(a, b) {
-  return a == b // for now
+  // considering  null case
+  if (a == null || b == null) {
+    return true;
+  } else {
+    return a == b // for now
+  }
+ 
 }
+
 
 
 // function that matches a person to a group
 function match(person, allgroups) {
 
-  gplen = allgroups.length;
-  bestid = 0
-  bestmatches = 0
+  var gplen = allgroups.length;
+  var bestid = 0
+  var bestmatches = 0
 
-  for (i = 0; i < gpen; i++) {
+  for (var i = 0; i < gpen; i++) {
     
-    curgp = allgroups[i]
-    same = 0
+    var curgp = allgroups[i]
+    var same = 0
 
     same += overlap(person.what, curgp.what) ? 1 : 0;
     same += overlap(person.when, curgp.when) ? 1 : 0;
@@ -212,7 +220,10 @@ function match(person, allgroups) {
     }
   }
 
-  if (bestmatches < 2) {
+  if (bestmatches < 3) {
+    newgp = Group(person.what, person,when, person.where, "newgp" + newgpct)
+    newgp.users.push(person)
+    allgroups.push(newgp)
     return "no mathes yet, we will update you later."
   }
 
@@ -264,22 +275,26 @@ function Person(usrid) {
   this.when = ""
   this.where = ""
 
-  this.taken = false
+  this.taken = false // set true when select "YES" to join channel | used to ask future preference
   this.preference = [3, 1, 2]
 }
 
-function Group(what, when, where, gpid){
+function Group(what, when, where, gpid) {
   this.what = what
   this.when = when
   this.where = where
   this.gpid = gpid
+  this.channelid = ""
 
   this.created = false // true if >= 2 ppl  |  wheneer created become true, send msg about this new group
   this.users = []
 }
 
 
-var allgroups = []
+var allgroups = [];
 var allUsers = [];
 var userIdToUser = new Object();
+var newgpct = 0;
 
+// group id to group obj
+// channel id
