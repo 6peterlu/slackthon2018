@@ -2,6 +2,8 @@ require('dotenv').config()
 
 const {WebClient} = require('@slack/client');
 
+const api = require('./api.js');
+
 const web = new WebClient(process.env.OAUTH_TOKEN);
 
 const SPAM_CHANNEL_ID = "CBUG4MKJ7";
@@ -22,6 +24,12 @@ let dummyData = [
   },
   {
     type: 'movies',
+   time: 'January 10th',
+   location: 'Embarcadero',
+    who: '',
+  },
+  {
+    type: 'restaurants',
    time: 'January 10th',
    location: 'Embarcadero',
     who: '',
@@ -226,7 +234,7 @@ exports.inviteUserToChannel = function(channelId) {
   }
 }
 
-exports.createNewChannel = function(channelName, userIdList) {
+exports.createNewChannel = function(channelName, userIdList, callback) {
   if (LOGGING_ON) {
     console.log("createNewChannelWithUsers: starting");
   }
@@ -244,6 +252,7 @@ exports.createNewChannel = function(channelName, userIdList) {
             user: user
           });
         }
+        callback(response.channel.id);
       });
   }
   if (LOGGING_ON) {
@@ -298,5 +307,53 @@ exports.introToGroupChannel = function(channelId) {
       text: constructedMessageIntroGroup.text,
     });
   }
+}
 
+// Yelp recommendations message
+exports.yelpRecs = function(term, location, channelId) {
+  api.yelpRecs(term, location, function(yelpUrls) {
+    let constructedMessageResponse = {
+      text: "Here are some recs for your search!",
+      attachments: [
+      ]
+    }
+    let i = 0;
+    let emoji = "";
+
+    for (let info in yelpUrls) {
+      if (i == 0) {
+        emoji = ":one:";
+      } else if (i == 1) {
+        emoji = ":two:";
+      } else {
+        emoji = ":three:";
+      }
+      constructedMessageResponse.attachments.push({
+        title: emoji + " " + yelpUrls[i].name + " at " + yelpUrls[i].location.address1 + " in " + yelpUrls[i].location.city,
+        title_link: yelpUrls[i].url
+      });
+      i++;
+    }
+    if (BOT_ON) {
+        web.chat.postMessage({
+          channel: channelId,
+          text: constructedMessageResponse.text,
+          attachments: constructedMessageResponse.attachments
+        });
+      }
+  });
+}
+
+exports.getFilesFromChannel = function(channelId, callback) {
+ web.files.list({
+   token: process.env.USER_TOKEN,
+   channel: channelId,
+   types: "images"
+ }).then(function(response) {
+   let filesArray = [];
+   for (let file of response.files) {
+     filesArray.push(file.url_private_download);
+   }
+   callback(filesArray);
+ });
 }

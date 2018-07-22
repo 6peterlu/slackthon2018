@@ -112,6 +112,7 @@ var express = require('express');
 var app = express();
 var url = require('url');
 var request = require('request');
+// var api = require("./api.js")
 
 var bodyParser = require('body-parser');
 
@@ -186,8 +187,10 @@ app.post('/', function(req, res){
 });
 
 
-app.post('/events', function(req, res){
+app.post('/events', function(req, res) {
   console.log("in events")
+
+  var currUser;
 
   res.sendStatus(200);
   if(!req.body.event.hasOwnProperty('bot_id')) {
@@ -196,14 +199,22 @@ app.post('/events', function(req, res){
     var text = req.body.event.text
     var currUserId = req.body.event.user
 
+    if(allUsers.includes(currUserId)) {
+      currUser = userIdToUser[currUserId];
+    } else {
+      allUsers.push(currUserId);
+      currUser = new Person(currUserId);
+      userIdToUser[currUserId] = currUser;
+    }
+
     if(allUsers.includes(currUserId) && userIdToUser[currUserId].waitingForLocation === true) {
       console.log("waiting for location is true")
       userIdToUser[currUserId].where = text;
       userIdToUser[currUserId].waitingForLocation = false;
       console.log("set location. waiting for location is false")
 
-      var matchresult = match(person, allgroups)
-      slack.sendPlaintextMessage(payload.channel.id, matchresult)
+      var matchresult = match(userIdToUser[currUserId], allgroups)
+      slack.sendPlaintextMessage(req.body.event.channel, matchresult)
     }
 
     else {
@@ -216,6 +227,12 @@ app.post('/events', function(req, res){
            // Do something after the sleep!
            slack.askUserForEventPreference(req.body.event.channel);
         // })
+      }
+
+      else if(text.includes("photos")) {
+        // slack.getFilesFromChannel(req.body.event.channel, function(filesarray) {
+        //   api.sendEmail("stacyviviphan@gmail.com", filesarray);
+        // });
       }
     }
   }
@@ -256,7 +273,7 @@ function match(person, allgroups) {
   var bestid = 0
   var bestmatches = 0
 
-  for (var i = 0; i < gpen; i++) {
+  for (var i = 0; i < gplen; i++) {
 
     var curgp = allgroups[i]
     var same = 0
@@ -272,10 +289,10 @@ function match(person, allgroups) {
   }
 
   if (bestmatches < 3) {
-    newgp = Group(person.what, person,when, person.where, "newgp" + newgpct)
+    newgp = new Group(person.what, person.when, person.where, "newgp" + Math.floor((Math.random() * 10000) + 1))
     newgp.users.push(person)
     allgroups.push(newgp)
-    return "no mathes yet, we will update you later."
+    return "no matches yet, we will update you later."
   }
 
   bestgp = allgroups[bestid]
@@ -283,11 +300,49 @@ function match(person, allgroups) {
   bestgp.users.push(person)
 
   if (bestgp.created == false) {
+    console.log("best group found. creating channel")
     bestgp.created = true
-    slack.createNewChannel("TestChannelplswork", bestgp.users);
+    // var tempPerson = bestgp.users[bestgp.users.length - 1]
+    // console.log("Removing: " + tempPerson.usrID)
+
+    var peterId = "UBHG1NLK0"
+
+    var toRemove = -1;
+    for (var j = 0; j < bestgp.users.length; j++) {
+      if(bestgp.users[j].usrID === peterId) {
+        toRemove = j;
+      }
+    }
+
+    if(toRemove !== -1) {
+      bestgp.users.splice(toRemove, 1)
+    }
+
+    console.log(bestgp.users)
+
+    var userIdList = []
+
+    for(var k = 0; k < bestgp.users.length; k++) {
+      userIdList.push(bestgp.users[k].usrID);
+    }
+
+    console.log(userIdList)
+
+    var bestChannelId = slack.createNewChannel("TestChannel" + bestgp.gpid, userIdList, function(channelId){
+      console.log(channelId);
+      slack.introToGroupChannel(channelId);
+
+      if(bestgp.what === "restaurants") {
+        slack.yelpRecs("restaurants", bestgp.where, channelId)
+      }
+    });
+    // console.log(bestChannelId);
+    // slack.introToGroupChannel(bestChannelId);
+    bestgp.users.push(userIdToUser[peterId])
+    bestgp.channelId = bestChannelId
 
   } else {
-    slack.inviteUserToChannel()
+    slack.inviteUserToChannel(bestgp.channelId)
   }
 
   return "found peers with similar preference! groupid: ", bestgp.gpid + " event: " + bestgp.what + " time: " + bestgp.when + " location: " + bestgp.where
@@ -352,7 +407,7 @@ var allgroups = [];
 var allUsers = [];
 var userIdToUser = new Object();
 var groupIdToGroup = new Object();
-var newgpct = 0;
+// var newgpct = 0;
 
 // group id to group obj
 // channel id
